@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Event registration dashboard" />
+    <title>EventHub | Registration dashboard</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#top" aria-label="EventHub home">Event<span>Hub</span></a>
+      <button class="text-button" id="refresh-events" type="button">Refresh events</button>
+    </header>
+
+    <main id="top" class="page-shell">
+      <section class="hero">
+        <p class="eyebrow">Serverless event registration</p>
+        <h1>Find an event.<br /><em>Save your place.</em></h1>
+        <p class="hero-copy">A simple dashboard powered directly by the Event Registration API.</p>
+      </section>
+
+      <section class="api-settings" aria-labelledby="api-settings-title">
+        <div>
+          <p class="eyebrow">Connection</p>
+          <h2 id="api-settings-title">API Gateway URL</h2>
+        </div>
+        <form id="api-form" class="api-form">
+          <label class="sr-only" for="api-url">API Gateway base URL</label>
+          <input id="api-url" name="api-url" type="url" placeholder="https://abc123.execute-api.eu-west-1.amazonaws.com/dev" required />
+          <button class="button button-dark" type="submit">Save &amp; load</button>
+        </form>
+        <p class="hint">Paste the <code>ApiUrl</code> output from <code>sam deploy</code>. It is stored only in this browser.</p>
+      </section>
+
+      <section class="content-grid" aria-label="Event registration dashboard">
+        <section class="panel events-panel" aria-labelledby="events-title">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Discover</p>
+              <h2 id="events-title">Upcoming events</h2>
+            </div>
+            <span id="event-count" class="count-pill">— events</span>
+          </div>
+          <div id="events-state" class="empty-state">Set your API Gateway URL to load events.</div>
+          <div id="events-list" class="event-list" hidden></div>
+        </section>
+
+        <aside class="side-column">
+          <section class="panel form-panel" aria-labelledby="register-title">
+            <p class="eyebrow">Reserve a place</p>
+            <h2 id="register-title">Register</h2>
+            <form id="registration-form" class="stack-form">
+              <label>
+                Event
+                <select id="event-id" name="eventId" required disabled>
+                  <option value="">Load events first</option>
+                </select>
+              </label>
+              <label>
+                Your name <span class="optional">Optional</span>
+                <input name="name" type="text" maxlength="100" autocomplete="name" placeholder="Jane Doe" />
+              </label>
+              <label>
+                Email address
+                <input name="email" type="email" autocomplete="email" placeholder="jane@example.com" required />
+              </label>
+              <button class="button button-accent" type="submit">Confirm registration</button>
+            </form>
+          </section>
+
+          <section class="panel lookup-panel" aria-labelledby="lookup-title">
+            <p class="eyebrow">Manage booking</p>
+            <h2 id="lookup-title">Your registrations</h2>
+            <form id="lookup-form" class="inline-form">
+              <label class="sr-only" for="lookup-email">Email address</label>
+              <input id="lookup-email" type="email" placeholder="Email address" required />
+              <button class="button button-light" type="submit">Find</button>
+            </form>
+            <div id="registrations-state" class="registration-results" aria-live="polite"></div>
+          </section>
+        </aside>
+      </section>
+    </main>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+    <script src="app.js"></script>
+  </body>
+</html>

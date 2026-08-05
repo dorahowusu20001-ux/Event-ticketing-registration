@@ -44,6 +44,20 @@ event-registration-system/
 └── README.md                  # you are here
 ```
 
+## Architecture diagram
+
+![Serverless Event Registration & Ticketing System architecture](diagrams/architecture.png)
+
+The draw.io-ready component list, connection labels, and layout guide are in
+[docs/architecture.md](docs/architecture.md). Use it to create or update the
+system architecture diagram for the project presentation or documentation.
+
+## Web dashboard
+
+The lightweight browser dashboard is in [frontend/](frontend/). It connects
+directly to the deployed API Gateway URL, without a separate backend. See
+[frontend/README.md](frontend/README.md) for local run instructions.
+
 ---
 
 ## Phase 1: Infrastructure Foundation
