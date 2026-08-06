@@ -48,6 +48,15 @@ Globals:
 Resources:
 
   # ---------------------------------------------------------------------
+  # API Gateway
+  # ---------------------------------------------------------------------
+  EventRegistrationApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub "event-registration-api-${Stage}"
+      StageName: !Ref Stage
+
+  # ---------------------------------------------------------------------
   # DynamoDB Tables
   # ---------------------------------------------------------------------
   EventsTable:
@@ -122,6 +131,7 @@ Resources:
         RegisterApi:
           Type: Api
           Properties:
+            RestApiId: !Ref EventRegistrationApi
             Path: /register
             Method: post
 
@@ -138,6 +148,7 @@ Resources:
         ListEventsApi:
           Type: Api
           Properties:
+            RestApiId: !Ref EventRegistrationApi
             Path: /events
             Method: get
 
@@ -154,6 +165,7 @@ Resources:
         GetRegistrationsApi:
           Type: Api
           Properties:
+            RestApiId: !Ref EventRegistrationApi
             Path: /registrations/{email}
             Method: get
 
@@ -170,6 +182,7 @@ Resources:
         CancelRegistrationApi:
           Type: Api
           Properties:
+            RestApiId: !Ref EventRegistrationApi
             Path: /registration/{id}
             Method: delete
 
@@ -228,7 +241,7 @@ Resources:
 Outputs:
   ApiUrl:
     Description: Base URL for the API Gateway stage
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}"
+    Value: !Sub "https://${EventRegistrationApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}"
   EventsTableName:
     Value: !Ref EventsTable
   RegistrationsTableName:

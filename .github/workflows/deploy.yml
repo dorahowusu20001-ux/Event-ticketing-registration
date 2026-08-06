@@ -57,7 +57,7 @@ jobs:
       - name: SAM deploy
         run: |
           sam deploy \
-            --stack-name event-registration-system \
+            --stack-name event-registration-system-prod \
             --capabilities CAPABILITY_IAM \
             --no-confirm-changeset \
             --no-fail-on-empty-changeset \
