@@ -109,7 +109,7 @@ def test_get_registrations_and_cancel(dynamodb_tables):
     reg_result = register.handler(reg_event, None)
     reg_id = json.loads(reg_result["body"])["registration"]["registrationId"]
 
-    get_event = {"pathParameters": {"email": "friend@example.com"}}
+    get_event = {"pathParameters": {"email": "friend%40example.com"}}
     get_result = get_registrations.handler(get_event, None)
     assert get_result["statusCode"] == 200
     assert json.loads(get_result["body"])["count"] == 1

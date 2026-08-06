@@ -6,6 +6,7 @@ const eventCount = document.querySelector("#event-count");
 const eventSelect = document.querySelector("#event-id");
 const registrationsState = document.querySelector("#registrations-state");
 const toast = document.querySelector("#toast");
+const registrationForm = document.querySelector("#registration-form");
 let events = [];
 let toastTimer;
 
@@ -68,9 +69,9 @@ async function lookupRegistrations(email) {
 }
 document.querySelector("#api-form").addEventListener("submit", (event) => { event.preventDefault(); localStorage.setItem("eventApiUrl", baseUrl()); loadEvents(); });
 document.querySelector("#refresh-events").addEventListener("click", loadEvents);
-document.querySelector("#registration-form").addEventListener("submit", async (event) => {
-  event.preventDefault(); const form = new FormData(event.currentTarget); const button = event.currentTarget.querySelector("button"); button.disabled = true;
-  try { const data = await request("/register", { method:"POST", headers:{ "Content-Type":"application/json" }, body:JSON.stringify(Object.fromEntries(form)) }); showToast(`You're registered! ID: ${data.registration.registrationId}`); event.currentTarget.reset(); }
+registrationForm.addEventListener("submit", async (event) => {
+  event.preventDefault(); const form = new FormData(registrationForm); const button = registrationForm.querySelector("button"); button.disabled = true;
+  try { const data = await request("/register", { method:"POST", headers:{ "Content-Type":"application/json" }, body:JSON.stringify(Object.fromEntries(form)) }); showToast(`You're registered! ID: ${data.registration.registrationId}`); registrationForm.reset(); }
   catch (error) { showToast(error.message, true); } finally { button.disabled = false; }
 });
 document.querySelector("#lookup-form").addEventListener("submit", (event) => { event.preventDefault(); lookupRegistrations(document.querySelector("#lookup-email").value.trim()); });

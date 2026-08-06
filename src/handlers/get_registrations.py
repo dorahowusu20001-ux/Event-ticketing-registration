@@ -7,6 +7,7 @@ using the EmailIndex Global Secondary Index for an efficient query
 import os
 import boto3
 from boto3.dynamodb.conditions import Key
+from urllib.parse import unquote
 from utils.response import build_response, error_response
 
 dynamodb = boto3.resource("dynamodb")
@@ -15,7 +16,10 @@ REGISTRATIONS_TABLE = os.environ["REGISTRATIONS_TABLE"]
 
 def handler(event, context):
     path_params = event.get("pathParameters") or {}
-    email = (path_params.get("email") or "").strip().lower()
+    # Browsers percent-encode reserved characters in path values (for example,
+    # ``@`` becomes ``%40``). Decode before querying the email GSI so the
+    # DynamoDB key matches the value saved by the registration endpoint.
+    email = unquote(path_params.get("email") or "").strip().lower()
 
     if not email:
         return error_response(400, "email path parameter is required")
