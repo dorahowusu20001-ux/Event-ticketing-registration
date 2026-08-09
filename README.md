@@ -46,17 +46,35 @@ event-registration-system/
 
 ## Architecture diagram
 
-![Serverless Event Registration & Ticketing System architecture](diagrams/architecture.png)
-
 The draw.io-ready component list, connection labels, and layout guide are in
-[docs/architecture.md](docs/architecture.md). Use it to create or update the
-system architecture diagram for the project presentation or documentation.
+[docs/architecture.md](docs/architecture.md). Use it to create the system
+architecture diagram for the project presentation or documentation.
 
 ## Web dashboard
 
-The lightweight browser dashboard is in [frontend/](frontend/). It connects
-directly to the deployed API Gateway URL, without a separate backend. See
-[frontend/README.md](frontend/README.md) for local run instructions.
+The dependency-free dashboard in [frontend/](frontend/) is configured for
+GitHub Pages and connects directly to the API Gateway endpoint.
+
+- **Dashboard (after Pages deployment):** https://dorahowusu20001-ux.github.io/Event-ticketing-registration/
+- **API base URL:** `https://zfxujvpipi.execute-api.us-west-1.amazonaws.com/dev`
+
+Open the dashboard, paste the API base URL into **API Gateway URL**, then
+select **Save & load**. To run it locally:
+
+```powershell
+python -m http.server 8080 --directory frontend
+```
+
+Open `http://localhost:8080`. The dashboard lets participants register, look
+up registrations by email, view each registration's ID and attendee details,
+and cancel a registration.
+
+### GitHub Pages deployment
+
+The [Pages workflow](.github/workflows/pages.yml) publishes `frontend/` when
+changes are pushed to `main`. In the repository's **Settings → Pages**, set
+the source to **GitHub Actions**; deployment status and the published URL are
+available in the **Actions** tab.
 
 ---
 
