@@ -20,15 +20,15 @@ table = dynamodb.Table(table_name)
 sample_events = [
     {
         "eventId": "evt-001",
-        "eventName": "AWS Workshop Accra 2026",
-        "date": "2026-05-15",
+        "eventName": "AWS Cloud & AI Bootcamp",
+        "date": "2026-09-15",
         "capacity": 100,
         "status": "Available",
     },
     {
         "eventId": "evt-002",
-        "eventName": "Cloud Solutions Summit",
-        "date": "2026-06-28",
+        "eventName": "Cloud Engineering Summit Ghana",
+        "date": "2026-10-24",
         "capacity": 40,
         "status": "Limited",
     },
