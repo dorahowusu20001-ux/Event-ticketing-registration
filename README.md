@@ -221,14 +221,15 @@ The application is deployed using AWS SAM, with GitHub Actions supporting the CI
 
 This removes the resources created by the SAM stack.
 
-Deliverables Checklist
- GitHub repository with API code
- CI/CD pipeline using GitHub Actions
- Lambda functions
- DynamoDB table definitions
- CloudWatch alarms configuration
- README documentation
- Product presentation — problem, challenges, and demo
+### Deliverables Checklist
+
+- [x] GitHub repository with API code
+- [x] CI/CD pipeline using GitHub Actions
+- [x] Lambda functions
+- [x] DynamoDB table definitions
+- [x] CloudWatch alarms configuration
+- [x] README documentation
+- [ ] Product presentation — problem, challenges, and demo
 ---
 
 ## Running tests locally (do this first, before any AWS deploy)
