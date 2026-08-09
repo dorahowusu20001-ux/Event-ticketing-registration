@@ -57,13 +57,27 @@ async function lookupRegistrations(email) {
       const row = document.createElement("div"); row.className = "registration-item";
       const name = document.createElement("strong"); name.textContent = item.eventName || item.eventId;
       const detail = document.createElement("p"); detail.textContent = `Status: ${item.status || "confirmed"}`;
+      const details = document.createElement("dl"); details.className = "registration-details";
+      const fields = [
+        ["Name", item.name || "Not provided"],
+        ["Email", item.email || email],
+        ["Registration ID", item.registrationId || "Unavailable"],
+      ];
+      if (item.createdAt) {
+        fields.push(["Registered", new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(item.createdAt))]);
+      }
+      fields.forEach(([label, value]) => {
+        const term = document.createElement("dt"); term.textContent = label;
+        const description = document.createElement("dd"); description.textContent = value;
+        details.append(term, description);
+      });
       const cancel = document.createElement("button"); cancel.className = "cancel-button"; cancel.type = "button"; cancel.textContent = "Cancel registration";
       cancel.addEventListener("click", async () => {
         if (!confirm(`Cancel your registration for ${item.eventName || item.eventId}?`)) return;
         try { await request(`/registration/${encodeURIComponent(item.registrationId)}`, { method: "DELETE" }); showToast("Registration cancelled."); lookupRegistrations(email); }
         catch (error) { showToast(error.message, true); }
       });
-      row.append(name, detail, cancel); registrationsState.append(row);
+      row.append(name, detail, details, cancel); registrationsState.append(row);
     });
   } catch (error) { registrationsState.textContent = error.message; showToast(error.message, true); }
 }
