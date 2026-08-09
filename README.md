@@ -46,9 +46,7 @@ event-registration-system/
 
 ## Architecture diagram
 
-The draw.io-ready component list, connection labels, and layout guide are in
-[docs/architecture.md](docs/architecture.md). Use it to create the system
-architecture diagram for the project presentation or documentation.
+![Event Registration & Ticketing System Architecture](docs/architecture.png)
 
 ## Web dashboard
 
