@@ -210,27 +210,25 @@ Simplest path for a student project: AWS Console → Billing → Budgets →
 
 ## Phase 5: Deployment and Optimization
 
-- **Cost:** everything here (Lambda, API Gateway, DynamoDB on-demand,
-  CloudWatch) has a generous AWS Free Tier — a class project running for a
-  few weeks should cost close to $0.
-- **Resource lifecycle:** set the CloudWatch Logs retention (already done —
-  see `AllFunctionsLogGroupRetention`, 14 days) so logs don't accumulate
-  forever.
-- **Tearing down when you're done:**
+The application is deployed using AWS SAM, with GitHub Actions supporting the CI/CD process.
+
+- **Cost:** The project uses serverless AWS services such as Lambda, API Gateway, DynamoDB, and CloudWatch. For a small class project, usage is expected to remain low, subject to AWS Free Tier limits and actual usage.
+- **Resource lifecycle:** CloudWatch log retention is configured for 14 days using `AllFunctionsLogGroupRetention` so that logs do not accumulate indefinitely.
+- **Tearing down resources:** When the project is no longer needed, the SAM stack can be removed using:
+
   ```bash
   sam delete
-  ```
-  This removes every resource the stack created — no leftover charges.
 
-### Deliverables checklist (matches the brief)
-- [x] GitHub repo with API code
-- [x] CI/CD pipeline (GitHub Actions)
-- [x] Lambda functions
-- [x] DynamoDB table definitions
-- [x] CloudWatch alarms config
-- [x] README file (this one)
-- [ ] Product presentation (problem, challenges, demo) — that part's on you 🙂
+This removes the resources created by the SAM stack.
 
+Deliverables Checklist
+ GitHub repository with API code
+ CI/CD pipeline using GitHub Actions
+ Lambda functions
+ DynamoDB table definitions
+ CloudWatch alarms configuration
+ README documentation
+ Product presentation — problem, challenges, and demo
 ---
 
 ## Running tests locally (do this first, before any AWS deploy)
