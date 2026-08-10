@@ -1,28 +1,38 @@
-# Event Registration & Ticketing System
+# EventHub — Event Registration & Ticketing System
 
-A serverless REST API built with **AWS SAM** that replaces Microsoft Forms +
-Excel for event sign-ups. This README is written so you can hand it to
-someone new to AWS and they can build the whole thing themselves, phase by
-phase, exactly the way the project brief lays it out.
+EventHub is a serverless event registration and ticketing application built on AWS. It provides a REST API and web dashboard for viewing available events, registering for an event, finding registrations by email address, and cancelling a registration.
 
-**Stack:** API Gateway → Lambda (Python 3.12) → DynamoDB, with CloudWatch
-alarms, optional SNS email confirmations, and a GitHub Actions CI/CD pipeline.
+**Architecture:** API Gateway → AWS Lambda (Python 3.12) → Amazon DynamoDB, with Amazon CloudWatch monitoring and alarms, optional SNS email notifications, and GitHub Actions CI/CD.
+
+**AWS services and tools:** API Gateway, Lambda, DynamoDB, CloudWatch, IAM, optional SNS, AWS SAM, and GitHub Actions.
+
+## Project description
+
+EventHub consists of a dependency-free web dashboard in `frontend/` and a REST API defined in `template.yaml`. The dashboard sends HTTPS requests to API Gateway, which routes each request to its Lambda handler. The Lambda functions implement the application logic and store event and registration data in DynamoDB. CloudWatch captures Lambda logs and monitors the registration function’s error rate; GitHub Actions runs tests and deploys the SAM application. AWS SAM defines and deploys the serverless infrastructure.
+
+## Live links
+
+- **GitHub Repository:** [Event-ticketing-registration](https://github.com/dorahowusu20001-ux/Event-ticketing-registration)
+- **Live Web Application:** https://dorahowusu20001-ux.github.io/Event-ticketing-registration/
+- **Live API Gateway:** `https://zfxujvpipi.execute-api.us-west-1.amazonaws.com/dev`
 
 ---
 
-## 0. Before you start — install these 3 things
+## Project prerequisites
 
-| Tool | Why | Check it worked |
+The following tools were used to build, test, and deploy EventHub.
+
+| Tool | Purpose | Verify installation |
 |---|---|---|
-| [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) | talks to your AWS account | `aws --version` |
-| [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html) | builds & deploys this project | `sam --version` |
-| Python 3.12 | the Lambda runtime we're using | `python3 --version` |
+| [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) | Authenticates with and operates the AWS account | `aws --version` |
+| [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html) | Builds and deploys the serverless application | `sam --version` |
+| Python 3.12 | Lambda runtime and local test runtime | `python3 --version` |
 
-Then connect the CLI to your AWS account (use a free-tier / sandbox account
-if you have one):
+AWS CLI credentials can be configured for local deployments with:
+
 ```bash
 aws configure
-# AWS Access Key ID, Secret Access Key, region (e.g. eu-west-1), output format (json)
+# AWS Access Key ID, Secret Access Key, region (for example, eu-west-1), output format (json)
 ```
 
 ---
@@ -31,114 +41,101 @@ aws configure
 
 ```
 event-registration-system/
-├── template.yaml              # SAM template: defines EVERY AWS resource
+├── template.yaml                 # SAM template: AWS resources and API routes
 ├── src/handlers/
-│   ├── register.py            # POST /register
-│   ├── list_events.py         # GET /events
-│   ├── get_registrations.py   # GET /registrations/{email}
-│   ├── cancel_registration.py # DELETE /registration/{id}
-│   └── utils/response.py      # shared response/CORS helper
-├── scripts/seed_events.py     # adds 2 sample events after deploy
-├── tests/test_handlers.py     # unit tests (mocked AWS, no real account needed)
-├── .github/workflows/deploy.yml  # CI/CD pipeline
-└── README.md                  # you are here
+│   ├── register.py               # POST /register
+│   ├── list_events.py            # GET /events
+│   ├── get_registrations.py      # GET /registrations/{email}
+│   ├── cancel_registration.py    # DELETE /registration/{id}
+│   └── utils/response.py         # shared JSON response and CORS helper
+├── scripts/seed_events.py        # adds two sample events after deployment
+├── tests/test_handlers.py        # unit tests using mocked AWS services
+├── .github/workflows/deploy.yml  # API test and deployment workflow
+├── .github/workflows/pages.yml   # frontend publishing workflow
+├── frontend/                     # dependency-free web dashboard
+├── docs/architecture.png         # implemented architecture diagram
+└── README.md
 ```
 
 ## Architecture diagram
 
-![Event Registration & Ticketing System Architecture](docs/architecture.png)
+The diagram below reflects the deployed EventHub architecture and its request, data, monitoring, and delivery flows.
+
+![EventHub architecture](docs/architecture.png)
 
 ## Web dashboard
 
-The dependency-free dashboard in [frontend/](frontend/) is configured for
-GitHub Pages and connects directly to the API Gateway endpoint.
+The dependency-free dashboard in [frontend/](frontend/) is published through GitHub Pages and communicates directly with the API Gateway endpoint. It lets participants register, look up registrations by email, view attendee details and registration IDs, and cancel registrations.
 
-- **Dashboard (after Pages deployment):** https://dorahowusu20001-ux.github.io/Event-ticketing-registration/
-- **API base URL:** `https://zfxujvpipi.execute-api.us-west-1.amazonaws.com/dev`
-
-Open the dashboard, paste the API base URL into **API Gateway URL**, then
-select **Save & load**. To run it locally:
+To use the deployed dashboard, open the **Live Web Application** link above, enter the API Gateway URL, and select **Save & load**. To serve it locally:
 
 ```powershell
 python -m http.server 8080 --directory frontend
 ```
 
-Open `http://localhost:8080`. The dashboard lets participants register, look
-up registrations by email, view each registration's ID and attendee details,
-and cancel a registration.
+Open `http://localhost:8080`. The API URL must include its stage path, such as `/dev`.
 
 ### GitHub Pages deployment
 
-The [Pages workflow](.github/workflows/pages.yml) publishes `frontend/` when
-changes are pushed to `main`. In the repository's **Settings → Pages**, set
-the source to **GitHub Actions**; deployment status and the published URL are
-available in the **Actions** tab.
+The [Pages workflow](.github/workflows/pages.yml) publishes `frontend/` when frontend files or the Pages workflow change on `main`; it can also be run manually. The repository’s Pages source must be set to **GitHub Actions**. Deployment status and the published URL are available from the **Actions** tab.
 
 ---
 
 ## Phase 1: Infrastructure Foundation
 
-**Goal:** understand *why* each piece exists before you deploy anything.
+This phase defines EventHub’s AWS foundation in `template.yaml`.
 
-- **API Gateway** — the "front door". Turns HTTP requests into events that
-  trigger Lambda functions.
-- **Lambda** — your business logic, running only when called (no server to
-  patch or pay for while idle).
-- **DynamoDB** — a NoSQL table. We use two: `Events` and `Registrations`.
-- **IAM** — every Lambda function gets *only* the permissions it needs
-  (e.g. the function that lists events can only *read* the Events table,
-  never write or delete). This is the "principle of least privilege."
+- **API Gateway** is the public REST API entry point. It receives HTTP requests and routes them to the corresponding Lambda function.
+- **Lambda** runs the Python 3.12 business logic only when an endpoint is invoked.
+- **DynamoDB** stores event and registration records in two on-demand tables.
+- **IAM** scopes each Lambda function’s access to the resources it needs.
 
-All of this is declared in **`template.yaml`** — one file, the whole
-infrastructure. Open it and read through the `Resources:` section; every
-AWS service in the diagram from the brief maps to a block in there.
+### Database design
 
-Table design:
-- `Events` table → key: `eventId` (string)
-- `Registrations` table → key: `registrationId` (string), plus a
-  **Global Secondary Index** on `email` so `GET /registrations/{email}` is a
-  fast, cheap *query* instead of a full table *scan*.
+| Resource | Purpose | Key design |
+|---|---|---|
+| `EventsTable` | Stores the events available for registration. | Partition key: `eventId` (string). |
+| `RegistrationsTable` | Stores submitted registrations and their status. | Partition key: `registrationId` (string). |
+| `EmailIndex` | Finds registrations for one email address efficiently. | Global secondary index on `email`, with all attributes projected. |
+
+`GET /registrations/{email}` queries `EmailIndex` rather than scanning the full registrations table. Both tables use `PAY_PER_REQUEST` billing, so capacity is managed automatically.
 
 ---
 
 ## Phase 2: API Development
 
-The 4 endpoints from the brief are already implemented in `src/handlers/`:
+The four API endpoints in the project brief are implemented in `src/handlers/`. Each handler returns JSON through the shared `utils/response.py` helper, including CORS headers for browser access.
 
-| Method | Path | File | What it does |
+| Endpoint | Purpose and Lambda behaviour | DynamoDB interaction | Expected result |
 |---|---|---|---|
-| POST | `/register` | `register.py` | validates email, confirms event exists, writes registration |
-| GET | `/events` | `list_events.py` | scans + returns all events, sorted by date |
-| GET | `/registrations/{email}` | `get_registrations.py` | queries the EmailIndex GSI |
-| DELETE | `/registration/{id}` | `cancel_registration.py` | deletes one registration, 404 if it's already gone |
+| `POST /register` | `register.py` validates the request body and email address, confirms the event exists, and creates a confirmed registration. | Reads `EventsTable`; writes a record to `RegistrationsTable`. | `201` with the new registration, or `400` for invalid input and `404` for an unknown event. |
+| `GET /events` | `list_events.py` retrieves every available event and sorts the response by date. | Scans `EventsTable`, following DynamoDB pagination. | `200` with `events` and `count`. |
+| `GET /registrations/{email}` | `get_registrations.py` URL-decodes and normalises the email before finding matching records. | Queries the `EmailIndex` on `RegistrationsTable`. | `200` with matching `registrations` and `count`; `400` when no email path value is supplied. |
+| `DELETE /registration/{id}` | `cancel_registration.py` checks that a registration exists before deleting it. | Reads and then deletes from `RegistrationsTable`. | `200` confirming cancellation, `400` for a missing ID, or `404` when the registration does not exist. |
 
-Each handler:
-- validates its inputs before touching DynamoDB
-- returns clean JSON with proper HTTP status codes (400/404/500) via the
-  shared `utils/response.py` helper
-- includes CORS headers so a web frontend can call it directly
+Unexpected DynamoDB failures in the list and registration-lookup handlers return `500` responses. The registration handler also publishes a confirmation message only when the optional SNS topic is configured.
 
-### Build & deploy it
+### Build and deploy
+
+The following commands are used to build and deploy EventHub from the project root:
 
 ```bash
-cd event-registration-system
 sam build
 sam deploy --guided
 ```
 
-`--guided` walks you through naming the stack, picking a region, and saving
-those choices to `samconfig.toml` so future deploys are just `sam deploy`.
-When it finishes, copy the `ApiUrl` value from the Outputs — that's your
-base URL for everything below.
+`--guided` records stack and region choices in `samconfig.toml`, allowing later deployments to use `sam deploy`. The deployment outputs include `ApiUrl`, `EventsTableName`, and `RegistrationsTableName`.
 
 ### Seed sample events
 
+The repository includes a script that inserts two sample events after deployment:
+
 ```bash
-# grab the real table name from your stack outputs, then:
+# Replace events-dev with the EventsTableName output for the deployed stage.
 python scripts/seed_events.py events-dev
 ```
 
-### Try it with curl
+### API examples
 
 ```bash
 # List events
@@ -160,66 +157,50 @@ curl -X DELETE https://YOUR_API_URL/registration/REGISTRATION_ID
 
 ## Phase 3: Automation & CI/CD
 
-`.github/workflows/deploy.yml` does two things:
+The [deployment workflow](.github/workflows/deploy.yml) implements this flow:
 
-1. **On every push/PR** → installs deps, runs `pytest tests/` (these use
-   `moto` to fake AWS, so no real credentials or costs are involved).
-2. **On push to `main` only** → runs `sam build` + `sam deploy` for real.
+`GitHub → GitHub Actions → tests → AWS SAM build → AWS deployment`
 
-To wire this up in your own GitHub repo:
+- On pull requests to `main`, the `test` job checks out the code, installs Python 3.12 and the test dependencies, then runs `pytest tests/ -v`.
+- On pushes to `main`, the same test job runs first. If it succeeds, the `deploy` job installs the AWS SAM CLI, configures AWS credentials from the `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_REGION` repository secrets, builds the application, and deploys the `event-registration-system-prod` stack.
+- The production deployment uses `Stage=prod`, `CAPABILITY_IAM`, `--resolve-s3`, and non-interactive change-set options.
 
-1. Create an IAM role AWS can assume via GitHub's OIDC provider (avoids
-   storing long-lived AWS keys as secrets — this is the current best
-   practice; ask if you want the exact IAM trust policy for this).
-2. Add two repo secrets: `AWS_DEPLOY_ROLE_ARN` and `AWS_REGION`.
-3. Push to `main` — check the **Actions** tab to watch it run.
-
-Branching strategy for a small team: work on feature branches, open a PR
-into `main` (this triggers the *test* job only), merge once green (this
-triggers *test + deploy*).
+The unit tests use `moto` to mock DynamoDB, so the test job does not require a live AWS account.
 
 ---
 
 ## Phase 4: Monitoring & Security
 
-Already built into `template.yaml`:
+EventHub configures the following operational and security-related controls in the SAM template.
 
-- **CloudWatch Logs** — every Lambda invocation is logged automatically
-  under `/aws/lambda/<function-name>`.
-- **CloudWatch Alarm** — `RegisterErrorRateAlarm` uses a metric-math
-  expression (`Errors / Invocations * 100`) to fire when the error rate
-  passes **5%**, matching the brief exactly. You can duplicate this alarm
-  block for the other 3 functions the same way.
-- **Input validation** — every handler rejects malformed input (bad email,
-  missing fields) *before* it reaches DynamoDB.
-- **Least privilege IAM** — look at the `Policies:` under each function in
-  `template.yaml`; each one only grants exactly what that function touches.
-- **SNS confirmation emails** (optional) — deploy with
-  `sam deploy --parameter-overrides Stage=dev NotificationEmail=you@example.com`
-  and you'll get an email to confirm the subscription, then a confirmation
-  email on every registration and an alert if the error alarm fires.
+- **CloudWatch Logs:** Lambda invocation logs are available under `/aws/lambda/<function-name>`. The template explicitly creates the register function’s log group (`/aws/lambda/event-register-<stage>`) with a 14-day retention period.
+- **CloudWatch alarm:** `RegisterErrorRateAlarm` calculates `(Errors / Invocations) * 100` for `RegisterFunction` over five-minute periods. It enters alarm state when the configured project threshold of **5%** is exceeded for one evaluation period. Missing data is treated as not breaching.
+- **Optional notifications:** Supplying `NotificationEmail` creates an SNS topic and email subscription. The register function can publish registration confirmations, and the error-rate alarm can send notifications to the same topic. Without this parameter, SNS resources are not created.
+- **Input validation:** The registration handler rejects missing event IDs, malformed email addresses, and invalid JSON before writing data. Lookup and cancellation handlers also reject missing path parameters.
+- **Least-privilege permissions:** Event listing and registration lookup receive DynamoDB read permissions; registration and cancellation receive permissions for the registration table as defined by their SAM policy templates. The registration function also has scoped `sns:Publish` permission for the optional notification topic.
+- **CORS and API access:** API Gateway and the shared response helper allow `GET`, `POST`, `DELETE`, and `OPTIONS` requests with `Content-Type` and `Authorization` headers from any origin. This supports the hosted dashboard but should be narrowed to trusted origins for a more restricted deployment.
 
-**AWS Budgets** (manual, one-time, console or CLI — not part of SAM):
+**AWS Budgets** are not defined by SAM in this repository. A budget can be added separately if required:
+
 ```bash
 aws budgets create-budget --account-id YOUR_ACCOUNT_ID --budget file://budget.json
 ```
-Simplest path for a student project: AWS Console → Billing → Budgets →
-"Create a budget" → Zero spend budget → alert at $1.
 
 ---
 
 ## Phase 5: Deployment and Optimization
 
-The application is deployed using AWS SAM, with GitHub Actions supporting the CI/CD process.
+EventHub is deployed through AWS SAM, with GitHub Actions automating the production deployment after successful tests.
 
-- **Cost:** The project uses serverless AWS services such as Lambda, API Gateway, DynamoDB, and CloudWatch. For a small class project, usage is expected to remain low, subject to AWS Free Tier limits and actual usage.
-- **Resource lifecycle:** CloudWatch log retention is configured for 14 days using `AllFunctionsLogGroupRetention` so that logs do not accumulate indefinitely.
-- **Tearing down resources:** When the project is no longer needed, the SAM stack can be removed using:
+- **Cost model:** Lambda, API Gateway, DynamoDB, and CloudWatch are serverless services. Costs depend on actual usage and applicable AWS Free Tier limits.
+- **Log lifecycle:** The template configures 14-day retention for the register Lambda log group. Review retention for other automatically created Lambda log groups if the deployment requires a consistent policy across all functions.
+- **Tearing down resources:** When the EventHub stack is no longer needed, it can be removed with:
 
   ```bash
   sam delete
+  ```
 
-This removes the resources created by the SAM stack.
+  This removes the resources created by the selected SAM stack.
 
 ### Deliverables Checklist
 
@@ -230,26 +211,22 @@ This removes the resources created by the SAM stack.
 - [x] CloudWatch alarms configuration
 - [x] README documentation
 - [ ] Product presentation — problem, challenges, and demo
+
 ---
 
-## Running tests locally (do this first, before any AWS deploy)
+## Running tests locally
+
+The project’s handler tests can be run locally before deployment:
 
 ```bash
 pip install -r tests/requirements-test.txt
 pytest tests/ -v
 ```
 
-All 5 tests should pass — they cover successful registration, an
-unknown-event rejection, invalid-email rejection, listing events, and the
-full register → look-up → cancel → cancel-again(404) flow. Green tests here
-mean your business logic is correct *before* you spend a single AWS credit.
+The test suite covers successful registration, unknown-event rejection, invalid-email rejection, event listing, and the register → lookup → cancel → cancel-again (`404`) flow.
 
 ## Troubleshooting
 
-- **`sam build` fails on imports** — make sure you're running it from the
-  project root (where `template.yaml` lives).
-- **403/permissions errors in Lambda logs** — check the `Policies:` block
-  for that function in `template.yaml`; it may be missing a permission.
-- **CORS errors from a browser** — confirm your frontend is hitting the
-  exact `ApiUrl` from `sam deploy` output, including the `/dev` (or your
-  stage name) prefix.
+- **`sam build` fails on imports** — run it from the repository root, where `template.yaml` is located.
+- **403 or permission errors in Lambda logs** — review the relevant function’s `Policies:` entry in `template.yaml` and the AWS deployment credentials.
+- **Browser CORS errors** — confirm that the frontend uses the exact `ApiUrl` deployment output, including the stage path such as `/dev` or `/prod`.
