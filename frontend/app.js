@@ -1,5 +1,4 @@
-const storedUrl = localStorage.getItem("eventApiUrl") || "";
-const apiUrlInput = document.querySelector("#api-url");
+const API_BASE_URL = "https://zfxujvpipi.execute-api.us-west-1.amazonaws.com/dev";
 const eventsList = document.querySelector("#events-list");
 const eventsState = document.querySelector("#events-state");
 const eventCount = document.querySelector("#event-count");
@@ -10,9 +9,7 @@ const registrationForm = document.querySelector("#registration-form");
 let events = [];
 let toastTimer;
 
-apiUrlInput.value = storedUrl;
-
-function baseUrl() { return apiUrlInput.value.trim().replace(/\/+$/, ""); }
+function baseUrl() { return API_BASE_URL.replace(/\/+$/, ""); }
 function endpoint(path) { return `${baseUrl()}${path}`; }
 function showToast(message, isError = false) {
   toast.textContent = message; toast.classList.toggle("error", isError); toast.hidden = false;
@@ -20,7 +17,6 @@ function showToast(message, isError = false) {
 }
 function apiError(payload, fallback) { return payload && payload.error ? payload.error : fallback; }
 async function request(path, options = {}) {
-  if (!baseUrl()) throw new Error("Enter your API Gateway URL first.");
   const response = await fetch(endpoint(path), options);
   const payload = await response.json().catch(() => null);
   if (!response.ok) throw new Error(apiError(payload, `Request failed (${response.status})`));
@@ -81,7 +77,6 @@ async function lookupRegistrations(email) {
     });
   } catch (error) { registrationsState.textContent = error.message; showToast(error.message, true); }
 }
-document.querySelector("#api-form").addEventListener("submit", (event) => { event.preventDefault(); localStorage.setItem("eventApiUrl", baseUrl()); loadEvents(); });
 document.querySelector("#refresh-events").addEventListener("click", loadEvents);
 registrationForm.addEventListener("submit", async (event) => {
   event.preventDefault(); const form = new FormData(registrationForm); const button = registrationForm.querySelector("button"); button.disabled = true;
@@ -89,4 +84,4 @@ registrationForm.addEventListener("submit", async (event) => {
   catch (error) { showToast(error.message, true); } finally { button.disabled = false; }
 });
 document.querySelector("#lookup-form").addEventListener("submit", (event) => { event.preventDefault(); lookupRegistrations(document.querySelector("#lookup-email").value.trim()); });
-if (storedUrl) loadEvents();
+loadEvents();
